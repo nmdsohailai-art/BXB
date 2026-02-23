@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuildX BIM Academy – Master Autodesk Revit</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1a6fbf;
+    --blue-dark: #0d4a85;
+    --blue-light: #2e8fe8;
+    --accent: #f0a500;
+    --bg: #0a1628;
+    --bg2: #0e1e38;
+    --bg3: #132444;
+    --text: #e8f0fb;
+    --muted: #8aaac8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: .5;
+  }
+
+  /* ── GRID LINES ── */
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(30,110,220,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(30,110,220,.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 5vw;
+    background: rgba(10,22,40,.85);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(30,110,220,.2);
+  }
+
+  .nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+
+  .nav-logo img.logo-img {
+    height: 48px; width: auto;
+  }
+
+  .nav-cta {
+    background: var(--accent); color: #000;
+    padding: 10px 24px; border-radius: 4px;
+    font-weight: 700; font-size: .9rem; letter-spacing: 1px; text-transform: uppercase;
+    text-decoration: none;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(240,165,0,.35); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: grid; place-items: center;
+    padding: 120px 5vw 80px;
+    overflow: hidden;
+  }
+
+  .hero-bg-shape {
+    position: absolute;
+    right: -5vw; top: 0; bottom: 0;
+    width: 55vw;
+    background: linear-gradient(135deg, var(--blue-dark) 0%, rgba(13,74,133,.3) 60%, transparent 100%);
+    clip-path: polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%);
+    z-index: 0;
+  }
+
+  .hero-building {
+    position: absolute;
+    right: 3vw; bottom: 0;
+    width: 38vw; max-width: 560px;
+    opacity: .18;
+    z-index: 0;
+  }
+
+  /* Building SVG illustration */
+  .hero-inner {
+    position: relative; z-index: 2;
+    max-width: 680px;
+    animation: fadeUp .8s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(240,165,0,.15);
+    border: 1px solid rgba(240,165,0,.4);
+    color: var(--accent);
+    font-size: .75rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+    padding: 6px 14px; border-radius: 20px; margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 8vw, 110px);
+    line-height: .95;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 .line2 { color: var(--blue-light); display: block; }
+
+  .hero .subtitle {
+    font-size: 1.25rem; font-weight: 300; color: var(--muted);
+    margin-bottom: 12px; letter-spacing: .5px;
+  }
+
+  .hero .tagline {
+    font-size: 1rem; color: var(--accent); font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 40px;
+  }
+
+  .hero-stats {
+    display: flex; gap: 32px; flex-wrap: wrap; margin-bottom: 40px;
+  }
+
+  .stat { border-left: 3px solid var(--blue-light); padding-left: 14px; }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; color: var(--text);
+    line-height: 1;
+  }
+  .stat-label { font-size: .8rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  .hero-btns { display: flex; gap: 16px; flex-wrap: wrap; }
+
+  .btn-primary {
+    background: var(--blue-light);
+    color: #fff; font-weight: 700; font-size: .95rem; letter-spacing: 1px;
+    padding: 14px 32px; border-radius: 4px; text-decoration: none; text-transform: uppercase;
+    transition: all .25s;
+  }
+  .btn-primary:hover { background: var(--blue); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(46,143,232,.35); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text); font-weight: 600; font-size: .95rem; letter-spacing: 1px;
+    padding: 14px 32px; border-radius: 4px; text-decoration: none; text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,.2);
+    transition: all .25s;
+  }
+  .btn-secondary:hover { border-color: var(--blue-light); color: var(--blue-light); }
+
+  /* ── SECTIONS ── */
+  section { position: relative; z-index: 1; }
+
+  .section-inner {
+    max-width: 1100px; margin: 0 auto; padding: 90px 5vw;
+  }
+
+  .section-label {
+    font-size: .75rem; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 10px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(32px, 5vw, 60px);
+    line-height: 1; letter-spacing: 1px; margin-bottom: 48px;
+  }
+
+  /* ── ABOUT STRIP ── */
+  .about-strip {
+    background: var(--bg2);
+    border-top: 1px solid rgba(46,143,232,.15);
+    border-bottom: 1px solid rgba(46,143,232,.15);
+  }
+
+  .about-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+  }
+
+  @media (max-width: 720px) { .about-grid { grid-template-columns: 1fr; } }
+
+  .about-text p {
+    font-size: 1.05rem; line-height: 1.75; color: var(--muted); font-weight: 300;
+  }
+
+  .highlight-box {
+    background: linear-gradient(135deg, var(--bg3), rgba(26,111,191,.2));
+    border: 1px solid rgba(46,143,232,.3);
+    border-radius: 8px; padding: 32px;
+  }
+  .highlight-box .hb-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 1px;
+    color: var(--blue-light); margin-bottom: 16px;
+  }
+  .highlight-box ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .highlight-box ul li {
+    display: flex; align-items: center; gap: 10px;
+    font-size: .95rem; color: var(--text);
+  }
+  .highlight-box ul li::before {
+    content: '▸'; color: var(--accent); font-size: .85rem; flex-shrink: 0;
+  }
+
+  /* ── CURRICULUM ── */
+  .curriculum { background: var(--bg); }
+
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+  }
+
+  .module-card {
+    background: var(--bg2);
+    border: 1px solid rgba(46,143,232,.15);
+    border-radius: 8px; padding: 24px;
+    transition: transform .25s, border-color .25s, box-shadow .25s;
+    animation: fadeUp .6s ease both;
+  }
+
+  .module-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--blue-light);
+    box-shadow: 0 12px 30px rgba(46,143,232,.15);
+  }
+
+  .module-num {
+    font-family: 'Bebas Neue', sans-serif; font-size: 2rem;
+    color: rgba(46,143,232,.25); line-height: 1; margin-bottom: 8px;
+  }
+
+  .module-title {
+    font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 6px;
+  }
+
+  .module-desc { font-size: .85rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── WHO SHOULD JOIN ── */
+  .who { background: var(--bg2); }
+
+  .roles-grid {
+    display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 40px;
+  }
+
+  .role-pill {
+    background: linear-gradient(135deg, rgba(26,111,191,.25), rgba(46,143,232,.1));
+    border: 1px solid rgba(46,143,232,.3);
+    border-radius: 40px; padding: 10px 22px;
+    font-size: .9rem; font-weight: 600; letter-spacing: .5px;
+    color: var(--text);
+  }
+
+  /* ── CAREERS ── */
+  .careers { background: var(--bg3); }
+
+  .career-cards {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px;
+  }
+
+  .career-card {
+    background: rgba(46,143,232,.07);
+    border: 1px solid rgba(46,143,232,.2);
+    border-radius: 8px; padding: 28px 20px; text-align: center;
+    transition: all .25s;
+  }
+
+  .career-card:hover {
+    background: rgba(46,143,232,.15);
+    border-color: var(--blue-light);
+    transform: translateY(-4px);
+  }
+
+  .career-icon { font-size: 2rem; margin-bottom: 12px; }
+
+  .career-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 1px;
+    color: var(--blue-light);
+  }
+
+  /* ── CERT SECTION ── */
+  .cert { background: var(--bg); }
+
+  .cert-inner {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center;
+  }
+
+  @media (max-width: 720px) { .cert-inner { grid-template-columns: 1fr; } }
+
+  .cert-badge {
+    background: linear-gradient(135deg, var(--blue-dark), var(--bg3));
+    border: 2px solid rgba(240,165,0,.4);
+    border-radius: 12px; padding: 48px 36px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+
+  .cert-badge::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(240,165,0,.12), transparent 65%);
+  }
+
+  .cert-badge .cert-logo {
+    font-family: 'Bebas Neue', sans-serif; font-size: 3rem; letter-spacing: 4px;
+    color: var(--accent); position: relative;
+  }
+
+  .cert-badge .cert-sub {
+    font-size: .85rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase;
+    margin: 8px 0 20px; position: relative;
+  }
+
+  .cert-badge .cert-title-big {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: var(--text);
+    letter-spacing: 2px; position: relative;
+  }
+
+  .cert-requirements { display: flex; flex-direction: column; gap: 16px; }
+
+  .req-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--bg2); border: 1px solid rgba(46,143,232,.15);
+    border-radius: 8px; padding: 18px 20px;
+  }
+
+  .req-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .req-text h4 { font-size: .95rem; font-weight: 700; margin-bottom: 4px; }
+  .req-text p { font-size: .85rem; color: var(--muted); }
+
+  /* ── CONTACT ── */
+  .contact { background: var(--blue-dark); }
+
+  .contact-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+  }
+
+  @media (max-width: 720px) { .contact-grid { grid-template-columns: 1fr; } }
+
+  .contact-info { display: flex; flex-direction: column; gap: 18px; }
+
+  .contact-item {
+    display: flex; align-items: center; gap: 14px;
+  }
+
+  .contact-item .ci-icon {
+    width: 42px; height: 42px; border-radius: 8px;
+    background: rgba(255,255,255,.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+  }
+
+  .contact-item .ci-label { font-size: .75rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .contact-item .ci-value { font-size: .95rem; font-weight: 600; color: var(--text); }
+
+  .contact-form {
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+
+  .cf-input, .cf-select, .cf-textarea {
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 4px; padding: 12px 16px;
+    color: var(--text); font-family: 'Barlow', sans-serif; font-size: .95rem;
+    width: 100%; transition: border-color .2s;
+    outline: none;
+  }
+
+  .cf-input:focus, .cf-select:focus, .cf-textarea:focus {
+    border-color: var(--blue-light);
+  }
+
+  .cf-textarea { min-height: 100px; resize: vertical; }
+  .cf-select option { background: var(--bg2); }
+
+  .btn-submit {
+    background: var(--accent); color: #000;
+    border: none; border-radius: 4px; padding: 14px;
+    font-family: 'Barlow', sans-serif; font-weight: 700; font-size: .95rem;
+    letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+    transition: all .25s; width: 100%;
+  }
+
+  .btn-submit:hover { opacity: .9; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(240,165,0,.3); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--bg); border-top: 1px solid rgba(46,143,232,.15);
+    padding: 32px 5vw; z-index: 1; position: relative;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+
+  footer .f-logo {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 2px; color: var(--muted);
+  }
+
+  footer .f-logo span { color: var(--accent); }
+
+  footer p { font-size: .8rem; color: var(--muted); }
+
+  /* ── FLOATING CTA ── */
+  .float-cta {
+    position: fixed; bottom: 28px; right: 28px; z-index: 90;
+    background: var(--accent); color: #000;
+    padding: 14px 24px; border-radius: 50px; font-weight: 700; font-size: .9rem;
+    letter-spacing: 1px; text-transform: uppercase; text-decoration: none;
+    box-shadow: 0 8px 24px rgba(240,165,0,.4);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 8px 24px rgba(240,165,0,.4); }
+    50% { box-shadow: 0 8px 36px rgba(240,165,0,.7); }
+  }
+
+  /* stagger delays */
+  .module-card:nth-child(1) { animation-delay: .05s; }
+  .module-card:nth-child(2) { animation-delay: .10s; }
+  .module-card:nth-child(3) { animation-delay: .15s; }
+  .module-card:nth-child(4) { animation-delay: .20s; }
+  .module-card:nth-child(5) { animation-delay: .25s; }
+  .module-card:nth-child(6) { animation-delay: .30s; }
+  .module-card:nth-child(7) { animation-delay: .35s; }
+  .module-card:nth-child(8) { animation-delay: .40s; }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <img class="logo-img" src="logo.png" alt="BuildX BIM Academy" />
+  </a>
+  <a href="#contact" class="nav-cta">Register Now</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-shape"></div>
+
+  <!-- Building wireframe SVG -->
+  <svg class="hero-building" viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="60" y="80" width="280" height="400" stroke="#2e8fe8" stroke-width="1.5"/>
+    <rect x="60" y="80" width="280" height="40" fill="rgba(46,143,232,.15)" stroke="#2e8fe8" stroke-width="1.5"/>
+    <line x1="60" y1="160" x2="340" y2="160" stroke="#2e8fe8" stroke-width="1"/>
+    <line x1="60" y1="220" x2="340" y2="220" stroke="#2e8fe8" stroke-width="1"/>
+    <line x1="60" y1="280" x2="340" y2="280" stroke="#2e8fe8" stroke-width="1"/>
+    <line x1="60" y1="340" x2="340" y2="340" stroke="#2e8fe8" stroke-width="1"/>
+    <line x1="60" y1="400" x2="340" y2="400" stroke="#2e8fe8" stroke-width="1"/>
+    <line x1="130" y1="80" x2="130" y2="480" stroke="#2e8fe8" stroke-width="1"/>
+    <line x1="200" y1="80" x2="200" y2="480" stroke="#2e8fe8" stroke-width="1"/>
+    <line x1="270" y1="80" x2="270" y2="480" stroke="#2e8fe8" stroke-width="1"/>
+    <!-- windows -->
+    <rect x="75" y="170" width="40" height="30" fill="rgba(46,143,232,.2)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="145" y="170" width="40" height="30" fill="rgba(46,143,232,.2)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="215" y="170" width="40" height="30" fill="rgba(46,143,232,.2)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="285" y="170" width="40" height="30" fill="rgba(46,143,232,.2)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="75" y="230" width="40" height="30" fill="rgba(46,143,232,.1)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="145" y="230" width="40" height="30" fill="rgba(240,165,0,.15)" stroke="#f0a500" stroke-width="1"/>
+    <rect x="215" y="230" width="40" height="30" fill="rgba(46,143,232,.1)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="285" y="230" width="40" height="30" fill="rgba(46,143,232,.1)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="75" y="290" width="40" height="30" fill="rgba(46,143,232,.2)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="145" y="290" width="40" height="30" fill="rgba(46,143,232,.2)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="215" y="290" width="40" height="30" fill="rgba(46,143,232,.2)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="285" y="290" width="40" height="30" fill="rgba(46,143,232,.2)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="75" y="350" width="40" height="30" fill="rgba(46,143,232,.1)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="145" y="350" width="40" height="30" fill="rgba(46,143,232,.1)" stroke="#2e8fe8" stroke-width="1"/>
+    <rect x="215" y="350" width="40" height="30" fill="rgba(240,165,0,.15)" stroke="#f0a500" stroke-width="1"/>
+    <rect x="285" y="350" width="40" height="30" fill="rgba(46,143,232,.1)" stroke="#2e8fe8" stroke-width="1"/>
+    <!-- door -->
+    <rect x="165" y="430" width="70" height="50" fill="rgba(46,143,232,.1)" stroke="#2e8fe8" stroke-width="1.5"/>
+  </svg>
+
+  <div class="hero-inner">
+    <div class="badge">BuildX BIM Academy</div>
+    <h1>Master<br><span class="line2">Autodesk Revit</span></h1>
+    <p class="subtitle">Professional BIM Modeling & Documentation Training</p>
+    <p class="tagline">Practical &nbsp;|&nbsp; Project-Based &nbsp;|&nbsp; Career-Focused</p>
+
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num">40</div>
+        <div class="stat-label">Hours Training</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Online Mode</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">0</div>
+        <div class="stat-label">Prior BIM Experience Needed</div>
+      </div>
+    </div>
+
+    <div class="hero-btns">
+      <a href="#contact" class="btn-primary">Enroll Now</a>
+      <a href="#curriculum" class="btn-secondary">View Curriculum</a>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about-strip">
+  <div class="section-inner">
+    <div class="about-grid">
+      <div class="about-text">
+        <p class="section-label">About the Course</p>
+        <h2 class="section-title">Why Learn<br>Revit?</h2>
+        <p>Revit is the industry-leading BIM software widely used by consultants, contractors, and developers. It enables intelligent 3D modelling, streamlined documentation, accurate quantity take-offs, and efficient project coordination. This course is designed to equip you with practical skills directly applicable to real-world construction projects.</p>
+      </div>
+      <div class="highlight-box">
+        <p class="hb-title">Locations Available</p>
+        <ul>
+          <li>UAE – United Arab Emirates</li>
+          <li>India</li>
+          <li>Online – Join from anywhere</li>
+          <li>Limited seats available – secure your spot early</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CURRICULUM -->
+<section class="curriculum" id="curriculum">
+  <div class="section-inner">
+    <p class="section-label">What You Will Learn</p>
+    <h2 class="section-title">Course Curriculum</h2>
+
+    <div class="modules-grid">
+      <div class="module-card">
+        <div class="module-num">01</div>
+        <div class="module-title">BIM Fundamentals</div>
+        <div class="module-desc">Core concepts, workflows, and industry standards underpinning Building Information Modeling.</div>
+      </div>
+      <div class="module-card">
+        <div class="module-num">02</div>
+        <div class="module-title">Architectural Modelling</div>
+        <div class="module-desc">Walls, floors, roofs, ceilings, stairs, and complete building envelope creation.</div>
+      </div>
+      <div class="module-card">
+        <div class="module-num">03</div>
+        <div class="module-title">Structural Modelling</div>
+        <div class="module-desc">Columns, beams, foundations, and structural framing within the BIM environment.</div>
+      </div>
+      <div class="module-card">
+        <div class="module-num">04</div>
+        <div class="module-title">MEP Systems</div>
+        <div class="module-desc">Mechanical, Electrical, and Plumbing modelling for coordinated building services.</div>
+      </div>
+      <div class="module-card">
+        <div class="module-num">05</div>
+        <div class="module-title">Families & Parametric Components</div>
+        <div class="module-desc">Creating and customising intelligent families and parametric Revit components.</div>
+      </div>
+      <div class="module-card">
+        <div class="module-num">06</div>
+        <div class="module-title">Construction Drawings</div>
+        <div class="module-desc">Producing professional sheet sets, annotations, dimensions, and title blocks.</div>
+      </div>
+      <div class="module-card">
+        <div class="module-num">07</div>
+        <div class="module-title">Schedules & Quantity Take-off</div>
+        <div class="module-desc">Automated material schedules, door/window schedules, and QTO reports.</div>
+      </div>
+      <div class="module-card">
+        <div class="module-num">08</div>
+        <div class="module-title">Work-sharing & Collaboration</div>
+        <div class="module-desc">Central files, worksharing, linked models, and multi-discipline coordination basics.</div>
+      </div>
+      <div class="module-card">
+        <div class="module-num">09</div>
+        <div class="module-title">Coordination Basics</div>
+        <div class="module-desc">Clash detection concepts and inter-discipline model coordination workflows.</div>
+      </div>
+      <div class="module-card">
+        <div class="module-num">10</div>
+        <div class="module-title">Rendering & Presentation</div>
+        <div class="module-desc">High-quality renders, walkthroughs, and visual presentations for client delivery.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHO SHOULD JOIN -->
+<section class="who">
+  <div class="section-inner">
+    <p class="section-label">Is This For You?</p>
+    <h2 class="section-title">Who Should Join</h2>
+    <div class="roles-grid">
+      <div class="role-pill">Civil Engineers</div>
+      <div class="role-pill">Architects</div>
+      <div class="role-pill">Draftsmen</div>
+      <div class="role-pill">MEP Engineers</div>
+      <div class="role-pill">Students</div>
+      <div class="role-pill">Working Professionals</div>
+    </div>
+    <p style="color:var(--muted); font-size:1rem; max-width:560px; line-height:1.75;">No prior BIM experience required. Whether you are just starting out or looking to upskill your current workflow, this course is structured to take you from fundamentals to industry-ready proficiency.</p>
+  </div>
+</section>
+
+<!-- CAREERS -->
+<section class="careers">
+  <div class="section-inner">
+    <p class="section-label">After Completion</p>
+    <h2 class="section-title">Career Opportunities</h2>
+    <div class="career-cards">
+      <div class="career-card">
+        <div class="career-icon">🏗️</div>
+        <div class="career-title">Revit Modeler</div>
+      </div>
+      <div class="career-card">
+        <div class="career-icon">🔧</div>
+        <div class="career-title">BIM Technician</div>
+      </div>
+      <div class="career-card">
+        <div class="career-icon">⚙️</div>
+        <div class="career-title">BIM Engineer</div>
+      </div>
+      <div class="career-card">
+        <div class="career-icon">📐</div>
+        <div class="career-title">BIM Draftsman</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CERTIFICATION -->
+<section class="cert">
+  <div class="section-inner">
+    <p class="section-label">Recognition</p>
+    <h2 class="section-title">Certification</h2>
+    <div class="cert-inner">
+      <div class="cert-badge">
+        <div class="cert-logo">BuildX</div>
+        <div class="cert-sub">BIM Academy</div>
+        <div class="cert-title-big">Certificate of Completion</div>
+      </div>
+      <div class="cert-requirements">
+        <div class="req-item">
+          <div class="req-icon">📋</div>
+          <div class="req-text">
+            <h4>Successful Project Submission</h4>
+            <p>Complete and submit the assigned course project demonstrating your BIM modelling skills.</p>
+          </div>
+        </div>
+        <div class="req-item">
+          <div class="req-icon">✅</div>
+          <div class="req-text">
+            <h4>Minimum Attendance Requirement</h4>
+            <p>Meet the required attendance threshold across all 40 hours of training sessions.</p>
+          </div>
+        </div>
+        <div class="req-item">
+          <div class="req-icon">🏆</div>
+          <div class="req-text">
+            <h4>Industry-Recognised Credential</h4>
+            <p>Awarded by BuildX BIM Academy upon successful completion, boosting your professional profile.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT / REGISTER -->
+<section class="contact" id="contact">
+  <div class="section-inner">
+    <p class="section-label">Get Started</p>
+    <h2 class="section-title">Register Now</h2>
+    <div class="contact-grid">
+      <div class="contact-info">
+        <p style="color:var(--muted); margin-bottom:8px; font-size:1rem; line-height:1.75;">Limited seats available. Secure your place today and take the next step toward becoming an industry-ready BIM professional.</p>
+        <div class="contact-item">
+          <div class="ci-icon">📞</div>
+          <div>
+            <div class="ci-label">Phone</div>
+            <div class="ci-value">+91 9490743995</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="ci-icon">✉️</div>
+          <div>
+            <div class="ci-label">Email</div>
+            <div class="ci-value"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f1b29e9f85909285dfb384989d95a9b0b1969c90989ddf929e9c">[email&#160;protected]</a></div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="ci-icon">📍</div>
+          <div>
+            <div class="ci-label">Locations</div>
+            <div class="ci-value">UAE & India (Online)</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="ci-icon">⏱️</div>
+          <div>
+            <div class="ci-label">Duration</div>
+            <div class="ci-value">40 Hours · Online</div>
+          </div>
+        </div>
+      </div>
+
+      <form class="contact-form" onsubmit="handleSubmit(event)">
+        <div class="form-row">
+          <input class="cf-input" type="text" placeholder="Full Name" required />
+          <input class="cf-input" type="email" placeholder="Email Address" required />
+        </div>
+        <div class="form-row">
+          <input class="cf-input" type="tel" placeholder="Phone Number" />
+          <select class="cf-select">
+            <option value="" disabled selected>Your Profession</option>
+            <option>Civil Engineer</option>
+            <option>Architect</option>
+            <option>Draftsman</option>
+            <option>MEP Engineer</option>
+            <option>Student</option>
+            <option>Other Professional</option>
+          </select>
+        </div>
+        <select class="cf-select">
+          <option value="" disabled selected>Preferred Location</option>
+          <option>UAE</option>
+          <option>India</option>
+          <option>Online</option>
+        </select>
+        <textarea class="cf-textarea" placeholder="Any questions or comments?"></textarea>
+        <button type="submit" class="btn-submit">Submit Registration →</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-logo"><img src="logo.png" alt="BuildX BIM Academy" style="height:36px;width:auto;vertical-align:middle;" /></div>
+  <p>© 2025 BuildX BIM Academy · UAE & India · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="35765a5b415456411b77405c59516d74755258545c591b565a58">[email&#160;protected]</a></p>
+</footer>
+
+<a href="#contact" class="float-cta">⚡ Limited Seats</a>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  function handleSubmit(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('.btn-submit');
+    btn.textContent = '✓ Registration Submitted!';
+    btn.style.background = '#22c55e';
+    btn.style.color = '#fff';
+    setTimeout(() => {
+      btn.textContent = 'Submit Registration →';
+      btn.style.background = '';
+      btn.style.color = '';
+      e.target.reset();
+    }, 3500);
+  }
+
+  // Intersection Observer for subtle reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.tar
